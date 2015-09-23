@@ -6,7 +6,10 @@
 # This software may be modified and distributed under the terms
 # of the BSD license.  See the LICENSE file for details.
 
-import datetime
+try:
+    from dateutil.relativedelta import relativedelta
+except ImportError:
+    from datetime import timedelta
 
 from aniso8601.date import parse_date
 from aniso8601.time import parse_time
@@ -112,9 +115,11 @@ def _parse_duration_prescribed(durationstr):
             seconds = 0
 
     #Note that weeks can be handled without conversion to days
-    totaldays = years * 365 + months * 30 + days
-
-    return datetime.timedelta(weeks=weeks, days=totaldays, hours=hours, minutes=minutes, seconds=seconds)
+    if (relativedelta):
+        return relativedelta(years=int(years), months=int(months), weeks=weeks, days=days, hours=hours, minutes=minutes, seconds=seconds)
+    else:
+        totaldays = years * 365 + months * 30 + days
+        return timedelta(weeks=weeks, days=totaldays, hours=hours, minutes=minutes, seconds=seconds)
 
 def _parse_duration_combined(durationstr):
     #Period of the form P<date>T<time>
@@ -125,9 +130,12 @@ def _parse_duration_combined(durationstr):
     datevalue = parse_date(datepart)
     timevalue = parse_time(timepart)
 
-    totaldays = datevalue.year * 365 + datevalue.month * 30 + datevalue.day
+    if (relativedelta):
+        return relativedelta(years=int(datevalue.year), months=int(datevalue.month), days=datevalue.day, hours=timevalue.hour, minutes=timevalue.minute, seconds=timevalue.second, microseconds=timevalue.microsecond)
+    else:
+        totaldays = datevalue.year * 365 + datevalue.month * 30 + datevalue.day
 
-    return datetime.timedelta(days=totaldays, hours=timevalue.hour, minutes=timevalue.minute, seconds=timevalue.second, microseconds=timevalue.microsecond)
+        return timedelta(days=totaldays, hours=timevalue.hour, minutes=timevalue.minute, seconds=timevalue.second, microseconds=timevalue.microsecond)
 
 def _parse_duration_element(durationstr, elementstr):
     #Extracts the specified portion of a duration, for instance, given:
